@@ -46,6 +46,8 @@ int main(void)
 	char plaintext[64] = {0,};
 	char ciphertext[64] = {0,};
 	int len=64;
+	char *option = argv[1];
+	char *algorithm = argv[3];
 
 	/* Initialize a context connecting us to the TEE */
 	res = TEEC_InitializeContext(NULL, &ctx);
@@ -69,6 +71,43 @@ int main(void)
 	// TA와 공유하는 buffer: tmpref 할당
 	op.params[0].tmpref.buffer = plaintext;
 	op.params[0].tmpref.size = len;
+
+	/*
+	 * 실행 커맨드
+	 * 암호화: TEEencrypt -e [평문파일(.txt)][알고리즘]
+	 * 복호화: TEEencrypt -d [암호문 + 암호화키 파일]
+	 * 알고리즘 = Ceaser | RSA(암호화만 구현) 
+	 */
+
+	if (strcmp(algorithm, "Ceaser") == 0) {
+		if (strcmp(option, "-e") == 0) {
+			// 임시로 파일대신 입력받아서 테스트, 추후 수정
+			printf("========================Ceaser Encryption========================\n");
+			printf("Please Input Plaintext : ");
+			scanf("%[^\n]s",plaintext);
+			memcpy(op.params[0].tmpref.buffer, plaintext, len);
+
+			/* invokeCommand 순서
+			 * 1. 랜덤키 생성 (1~26)
+			 * 2. 랜덤키로 평문암호화
+			 * 3. 랜덤키도 TA의 root키로 암호화
+			 */ 
+
+			/*
+			 * 암호화된 암호문과 TA의 랜덤키를 파일로 저장.
+			 * 암호화된 텍스트는 op.params[0].tmpref.buffer에 있음
+			 */
+		}
+		else if (strcmp(option, "-d") == 0) {
+
+		}
+	}
+
+	else if(strcmp(algorithm, "RSA") == 0) {
+		if (strcmp(option, "-e") == 0) {
+
+		}
+	}
 
 	/*
 	 * TA_TEEencrypt_CMD_INC_VALUE is the actual function in the TA to be
