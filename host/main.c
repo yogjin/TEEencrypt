@@ -88,11 +88,22 @@ int main(void)
 			memcpy(op.params[0].tmpref.buffer, plaintext, len);
 
 			/* invokeCommand 순서
-			 * 1. 랜덤키 생성 (1~26)
-			 * 2. 랜덤키로 평문암호화
-			 * 3. 랜덤키도 TA의 root키로 암호화
+			 * 1. 랜덤키 생성 (1~26): TA_TEEencrypt_CMD_RANDOMKEY_GET
+			 * 2. 랜덤키로 평문암호화: TA_TEEencrypt_CMD_ENC_VALUE
+			 * 3. 랜덤키도 TA의 root키로 암호화: TA_TEEencrypt_CMD_RANDOMKEY_ENC
 			 */ 
+			res = TEEC_InvokeCommand(&sess, TA_TEEencrypt_CMD_RANDOMKEY_GET, &op, &err_origin);
+			if (res != TEEC_SUCCESS)
+				errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x", res, err_origin);
+			
+			res = TEEC_InvokeCommand(&sess, TA_TEEencrypt_CMD_ENC_VALUE, &op, &err_origin);
+			if (res != TEEC_SUCCESS)
+				errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x", res, err_origin);
 
+			res = TEEC_InvokeCommand(&sess, TA_TEEencrypt_CMD_RANDOMKEY_ENC, &op, &err_origin);
+			if (res != TEEC_SUCCESS)
+				errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x", res, err_origin);
+			
 			/*
 			 * 암호화된 암호문과 TA의 랜덤키를 파일로 저장.
 			 * 암호화된 텍스트는 op.params[0].tmpref.buffer에 있음

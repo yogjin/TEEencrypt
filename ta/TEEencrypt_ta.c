@@ -94,6 +94,22 @@ void TA_CloseSessionEntryPoint(void __maybe_unused *sess_ctx)
 	IMSG("Goodbye!\n");
 }
 
+static TEE_Result enc_value(uint32_t param_types, TEE_Param params[4]) {
+
+}
+
+static TEE_Result dec_value(uint32_t param_types, TEE_Param params[4]) {
+
+}
+
+static TEE_Result randomKey_get(uint32_t param_types, TEE_Param params[4]) {
+
+}
+
+static TEE_Result randomKey_enc(uint32_t param_types, TEE_Param params[4]) {
+
+}
+
 /*
  * Called when a TA is invoked. sess_ctx hold that value that was
  * assigned by TA_OpenSessionEntryPoint(). The rest of the paramters
@@ -106,7 +122,14 @@ TEE_Result TA_InvokeCommandEntryPoint(void __maybe_unused *sess_ctx,
 	(void)&sess_ctx; /* Unused parameter */
 
 	switch (cmd_id) {
+	case TA_TEEencrypt_CMD_ENC_VALUE:
+		return enc_value(param_types, params);
+	case TA_TEEencrypt_CMD_DEC_VALUE:
+		return dec_value(param_types, params);
 	case TA_TEEencrypt_CMD_RANDOMKEY_GET:
+		return randomKey_get(param_types, params);
+	case TA_TEEencrypt_CMD_RANDOMKEY_ENC:
+		return randomKey_enc(param_types, params);
 		
 	default:
 		return TEE_ERROR_BAD_PARAMETERS;
