@@ -43,6 +43,9 @@ int main(void)
 	TEEC_Operation op;
 	TEEC_UUID uuid = TA_TEEencrypt_UUID;
 	uint32_t err_origin;
+	char plaintext[64] = {0,};
+	char ciphertext[64] = {0,};
+	int len=64;
 
 	/* Initialize a context connecting us to the TEE */
 	res = TEEC_InitializeContext(NULL, &ctx);
@@ -54,7 +57,7 @@ int main(void)
 	if (res != TEEC_SUCCESS)
 		errx(1, "TEEC_Opensession failed with code 0x%x origin 0x%x",
 			res, err_origin);
-			
+
 	memset(&op, 0, sizeof(op));
 
 	/*
@@ -63,7 +66,9 @@ int main(void)
 	 */
 	op.paramTypes = TEEC_PARAM_TYPES(TEEC_VALUE_INOUT, TEEC_NONE,
 					 TEEC_NONE, TEEC_NONE);
-	op.params[0].value.a = 42;
+	// TA와 공유하는 buffer: tmpref 할당
+	op.params[0].tmpref.buffer = plaintext;
+	op.params[0].tmpref.size = len;
 
 	/*
 	 * TA_TEEencrypt_CMD_INC_VALUE is the actual function in the TA to be
