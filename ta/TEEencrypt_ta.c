@@ -143,8 +143,10 @@ static TEE_Result dec_value(uint32_t param_types, TEE_Param params[4]) {
 	char * in = (char *)params[0].memref.buffer;
 	int in_len = strlen (params[0].memref.buffer);
 	char decrypted [64]={0,};
+	int encrypted_randomKey = params[1].value.a;
 
-	DMSG("========================Decryption========================\n");
+	key = encrypted_randomKey - rootKey;
+	DMSG("========================Ceaser Decryption========================\n");
 	DMSG ("Ciphertext :  %s", in);
 	memcpy(decrypted, in, in_len);
 

@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
 	FILE *fp;
 	int len=64;
 	char *option = argv[1];
-	char *algorithm = argv[3];
+	char *algorithm;
 
 	/* Initialize a context connecting us to the TEE */
 	res = TEEC_InitializeContext(NULL, &ctx);
@@ -77,12 +77,13 @@ int main(int argc, char* argv[])
 	/*
 	 * 실행 커맨드
 	 * 암호화: TEEencrypt -e [평문파일(.txt)][알고리즘]
-	 * 복호화: TEEencrypt -d [암호문 + 암호화키 파일]
+	 * 복호화: TEEencrypt -d  [암호문 파일][암호화키 파일]
 	 * 알고리즘 = Ceaser | RSA(암호화만 구현) 
 	 */
 
-	if (strcmp(algorithm, "Ceaser") == 0) {
-		if (strcmp(option, "-e") == 0) {
+	if (strcmp(option, "-e") == 0) {
+		algorithm = argv[3];
+		if (strcmp(algorithm, "Ceaser") == 0) {
 			printf("========================Ceaser Encryption========================\n");
 
 			// (1) CA에서 평문 텍스트 파일 읽기, TA 호출
@@ -121,15 +122,43 @@ int main(int argc, char* argv[])
 
 			fclose(fp);
 		}
-		else if (strcmp(option, "-d") == 0) {
+		else if (strcmp(algorithm, "RSA") == 0) {
 
 		}
 	}
 
-	else if(strcmp(algorithm, "RSA") == 0) {
-		if (strcmp(option, "-e") == 0) {
+	else if(strcmp(option, "-d") == 0) {
+		printf("========================Ceaser Decryption========================\n");
 
-		}
+		// (1) CA에서 암호문과 암호화키 텍스트 파일을 읽고 TA로 복호화 요청
+		fp = fopen(argv[2], "r");
+		fgets(ciphertext, sizeof(ciphertext), fp);
+		printf("Ciphertext: %s\n", ciphertext);
+		memcpy(op.params[0].tmpref.buffer, ciphertext, len);
+
+		fp = fopen(argv[3], "r");
+		fscanf(fp, "%d", &encrypted_randomKey);
+		printf("key: %d\n", encrypted_randomKey);
+
+		memcpy(op.params[0].tmpref.buffer, ciphertext, len);
+		op.params[1].value.a = encrypted_randomKey;
+
+		/* invokeCommand 로직 (TA_TEEencrypt_CMD_DEC_VALUE)
+		 * (2) TA에서 암호화된 랜덤키를 root 키로 복호화
+		 * (3) 랜덤키로 평문 복호화
+		 * (4) TA에서 복호화된 결과를 CA로 전달
+		 */ 
+		res = TEEC_InvokeCommand(&sess, TA_TEEencrypt_CMD_DEC_VALUE, &op, &err_origin);
+		if (res != TEEC_SUCCESS)
+			errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x", res, err_origin);
+
+		// (5) 전달받은 결과를 CA에서 텍스트 파일로 저장
+		memcpy(plaintext, op.params[0].tmpref.buffer, len);
+		fp = fopen("Ceaser_plaintext.txt","w");
+			fprintf(fp, "%s", plaintext);
+			printf("Ceaser_plaintext.txt is created\n");
+
+			fclose(fp);
 	}
 
 	TEEC_CloseSession(&sess);
