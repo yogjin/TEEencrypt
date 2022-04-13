@@ -35,7 +35,7 @@
 /* To the the UUID (found the the TA's h-file(s)) */
 #include <TEEencrypt_ta.h>
 
-int main(void)
+int main(int argc, char* argv[])
 {
 	TEEC_Result res;
 	TEEC_Context ctx;
@@ -87,23 +87,15 @@ int main(void)
 			scanf("%[^\n]s",plaintext);
 			memcpy(op.params[0].tmpref.buffer, plaintext, len);
 
-			/* invokeCommand 순서
-			 * 1. 랜덤키 생성 (1~26): TA_TEEencrypt_CMD_RANDOMKEY_GET
-			 * 2. 랜덤키로 평문암호화: TA_TEEencrypt_CMD_ENC_VALUE
-			 * 3. 랜덤키도 TA의 root키로 암호화: TA_TEEencrypt_CMD_RANDOMKEY_ENC
+			/* invokeCommand 로직 (TA_TEEencrypt_CMD_ENC_VALUE)
+			 * 1. 랜덤키 생성 (1~26)
+			 * 2. 랜덤키로 평문암호화
+			 * 3. 랜덤키도 TA의 root키로 암호화
 			 */ 
-			res = TEEC_InvokeCommand(&sess, TA_TEEencrypt_CMD_RANDOMKEY_GET, &op, &err_origin);
-			if (res != TEEC_SUCCESS)
-				errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x", res, err_origin);
-			
 			res = TEEC_InvokeCommand(&sess, TA_TEEencrypt_CMD_ENC_VALUE, &op, &err_origin);
 			if (res != TEEC_SUCCESS)
 				errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x", res, err_origin);
 
-			res = TEEC_InvokeCommand(&sess, TA_TEEencrypt_CMD_RANDOMKEY_ENC, &op, &err_origin);
-			if (res != TEEC_SUCCESS)
-				errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x", res, err_origin);
-			
 			/*
 			 * 암호화된 암호문과 TA의 랜덤키를 파일로 저장.
 			 * 암호화된 텍스트는 op.params[0].tmpref.buffer에 있음
@@ -119,19 +111,6 @@ int main(void)
 
 		}
 	}
-
-	/*
-	 * TA_TEEencrypt_CMD_INC_VALUE is the actual function in the TA to be
-	 * called.
-	 */
-	printf("Invoking TA to increment %d\n", op.params[0].value.a);
-	res = TEEC_InvokeCommand(&sess, TA_TEEencrypt_CMD_INC_VALUE, &op,
-				 &err_origin);
-	res = TEEC_InvokeCommand(&sess, TA_TEEencrypt_CMD_DEC_VALUE, &op,
-				 &err_origin);
-	res = TEEC_InvokeCommand(&sess, TA_TEEencrypt_CMD_RANDOMKEY_GET, &op,
-				 &err_origin);
-	
 
 	TEEC_CloseSession(&sess);
 
