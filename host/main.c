@@ -83,25 +83,25 @@ int main(int argc, char* argv[])
 
 	if (strcmp(algorithm, "Ceaser") == 0) {
 		if (strcmp(option, "-e") == 0) {
-			// 임시로 파일대신 입력받아서 테스트, 추후 수정
 			printf("========================Ceaser Encryption========================\n");
 
+			// (1) CA에서 평문 텍스트 파일 읽기, TA 호출
 			fp = fopen(argv[2], "r");
 			fgets(plaintext, sizeof(plaintext), fp);
 			printf("Plaintext: %s\n", plaintext);
 			memcpy(op.params[0].tmpref.buffer, plaintext, len);
 
 			/* invokeCommand 로직 (TA_TEEencrypt_CMD_ENC_VALUE)
-			 * 1. 랜덤키 생성 (1~26)
-			 * 2. 랜덤키로 평문암호화
-			 * 3. 랜덤키도 TA의 root키로 암호화
+			 * (2) TA에서 랜덤키 생성
+			 * (3) 랜덤키로 평문 암호화, 랜덤키는 TA의 root키로 암호화 (전부 시저암호 사용)
 			 */ 
 			res = TEEC_InvokeCommand(&sess, TA_TEEencrypt_CMD_ENC_VALUE, &op, &err_origin);
 			if (res != TEEC_SUCCESS)
 				errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x", res, err_origin);
 
 			/*
-			 * 암호화된 암호문과 TA의 랜덤키를 파일로 저장.
+			 * (4) TA에서 CA로 암호문 + 암호화된 TA키 전달
+			 * (5) CA는 받은 암호문, 암호화된 키를 파일로 저장
 			 * 암호화된 텍스트는 op.params[0].tmpref.buffer에 있음
 			 * 암호화된 비밀키는 op.params[0].value.a에 있음
 			 */
