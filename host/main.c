@@ -45,6 +45,7 @@ int main(int argc, char* argv[])
 	uint32_t err_origin;
 	char plaintext[64] = {0,};
 	char ciphertext[64] = {0,};
+	uint32_t encrypted_randomKey;
 	int len=64;
 	char *option = argv[1];
 	char *algorithm = argv[3];
@@ -66,7 +67,7 @@ int main(int argc, char* argv[])
 	 * Prepare the argument. Pass a value in the first parameter,
 	 * the remaining three parameters are unused.
 	 */
-	op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_OUTPUT, TEEC_NONE,
+	op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_OUTPUT, TEEC_VALUE_INOUT,
 					 TEEC_NONE, TEEC_NONE);
 	// TA와 공유하는 buffer: tmpref 할당
 	op.params[0].tmpref.buffer = plaintext;
@@ -99,7 +100,13 @@ int main(int argc, char* argv[])
 			/*
 			 * 암호화된 암호문과 TA의 랜덤키를 파일로 저장.
 			 * 암호화된 텍스트는 op.params[0].tmpref.buffer에 있음
+			 * 암호화된 비밀키는 op.params[0].value.a에 있음
 			 */
+			memcpy(ciphertext, op.params[0].tmpref.buffer, len);
+			encrypted_randomKey = op.params[1].value.a;
+
+			printf("Ciphertext : %s\n", ciphertext);
+			printf("Encrypted_randomKey : %d\n", encrypted_randomKey);
 		}
 		else if (strcmp(option, "-d") == 0) {
 

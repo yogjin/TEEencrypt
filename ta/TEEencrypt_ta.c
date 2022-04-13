@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 int key;
+int rootKey = 1;
 /*
  * Called when the instance of the TA is created. This is the first call in
  * the TA.
@@ -126,6 +127,12 @@ static TEE_Result enc_value(uint32_t param_types, TEE_Param params[4]) {
 			encrypted[i] += 'A';
 		}
 	}
+
+	// 랜덤키도 root키로 암호화 (단순 덧셈)
+	randomKey = randomKey + rootKey;
+	params[1].value.a = randomKey;
+
+	DMSG ("Encrypted_random_key :  %d", params[1].value.a);
 	DMSG ("Ciphertext :  %s", encrypted);
 	memcpy(in, encrypted, in_len);
 
