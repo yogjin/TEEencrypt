@@ -46,6 +46,7 @@ int main(int argc, char* argv[])
 	char plaintext[64] = {0,};
 	char ciphertext[64] = {0,};
 	uint32_t encrypted_randomKey;
+	FILE *fp;
 	int len=64;
 	char *option = argv[1];
 	char *algorithm = argv[3];
@@ -84,8 +85,10 @@ int main(int argc, char* argv[])
 		if (strcmp(option, "-e") == 0) {
 			// 임시로 파일대신 입력받아서 테스트, 추후 수정
 			printf("========================Ceaser Encryption========================\n");
-			printf("Please Input Plaintext : ");
-			scanf("%[^\n]s",plaintext);
+
+			fp = fopen(argv[2], "r");
+			fgets(plaintext, sizeof(plaintext), fp);
+			printf("Plaintext: %s\n", plaintext);
 			memcpy(op.params[0].tmpref.buffer, plaintext, len);
 
 			/* invokeCommand 로직 (TA_TEEencrypt_CMD_ENC_VALUE)
@@ -107,6 +110,16 @@ int main(int argc, char* argv[])
 
 			printf("Ciphertext : %s\n", ciphertext);
 			printf("Encrypted_randomKey : %d\n", encrypted_randomKey);
+			
+			fp = fopen("Ceaser_ciphertext.txt","w");
+			fprintf(fp, "%s", ciphertext);
+			printf("Ceaser_ciphertext.txt is created\n");
+
+			fp = fopen("Ceaser_key.txt","w");
+			fprintf(fp, "%d", encrypted_randomKey);
+			printf("Ceaser_key.txt is created\n");
+
+			fclose(fp);
 		}
 		else if (strcmp(option, "-d") == 0) {
 
