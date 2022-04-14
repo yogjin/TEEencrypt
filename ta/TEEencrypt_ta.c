@@ -153,7 +153,7 @@ static TEE_Result enc_value(uint32_t param_types, TEE_Param params[4]) {
 		}
 	}
 
-	// 랜덤키도 root키로 암호화 (단순 덧셈)
+	// 랜덤키도 root키로 암호화 (단순 덧셈으로 시저암호 구현)
 	randomKey = randomKey + rootKey;
 	params[1].value.a = randomKey;
 
@@ -171,7 +171,7 @@ static TEE_Result dec_value(uint32_t param_types, TEE_Param params[4]) {
 	int encrypted_randomKey = params[1].value.a;
 
 	key = encrypted_randomKey - rootKey;
-	DMSG("========================Ceaser Decryption========================\n");
+	DMSG("========================Caesar Decryption========================\n");
 	DMSG ("Ciphertext :  %s", in);
 	memcpy(decrypted, in, in_len);
 

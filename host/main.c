@@ -85,13 +85,13 @@ int main(int argc, char* argv[])
 	 * 실행 커맨드
 	 * 암호화: TEEencrypt -e [평문파일(.txt)][알고리즘]
 	 * 복호화: TEEencrypt -d  [암호문 파일][암호화키 파일]
-	 * 알고리즘 = Ceaser | RSA(암호화만 구현) 
+	 * 알고리즘 = Caesar | RSA(암호화만 구현) 
 	 */
 
 	if (strcmp(option, "-e") == 0) {
 		algorithm = argv[3];
-		if (strcmp(algorithm, "Ceaser") == 0) {
-			printf("========================Ceaser Encryption========================\n");
+		if (strcmp(algorithm, "Caesar") == 0) {
+			printf("========================Caesar Encryption========================\n");
 
 			// (1) CA에서 평문 텍스트 파일 읽기, TA 호출
 			fp = fopen(argv[2], "r");
@@ -119,13 +119,13 @@ int main(int argc, char* argv[])
 			printf("Ciphertext : %s\n", ciphertext);
 			printf("Encrypted_randomKey : %d\n", encrypted_randomKey);
 			
-			fp = fopen("Ceaser_ciphertext.txt","w");
+			fp = fopen("Caesar_ciphertext.txt","w");
 			fprintf(fp, "%s", ciphertext);
-			printf("Ceaser_ciphertext.txt is created\n");
+			printf("Caesar_ciphertext.txt is created\n");
 
-			fp = fopen("Ceaser_key.txt","w");
+			fp = fopen("Caesar_key.txt","w");
 			fprintf(fp, "%d", encrypted_randomKey);
-			printf("Ceaser_key.txt is created\n");
+			printf("Caesar_key.txt is created\n");
 
 			fclose(fp);
 		}
@@ -170,7 +170,7 @@ int main(int argc, char* argv[])
 	}
 
 	else if(strcmp(option, "-d") == 0) {
-		printf("========================Ceaser Decryption========================\n");
+		printf("========================Caesar Decryption========================\n");
 
 		// (1) CA에서 암호문과 암호화키 텍스트 파일을 읽고 TA로 복호화 요청
 		fp = fopen(argv[2], "r");
@@ -196,9 +196,9 @@ int main(int argc, char* argv[])
 
 		// (5) 전달받은 결과를 CA에서 텍스트 파일로 저장
 		memcpy(plaintext, op.params[0].tmpref.buffer, len);
-		fp = fopen("Ceaser_plaintext.txt","w");
+		fp = fopen("Caesar_plaintext.txt","w");
 			fprintf(fp, "%s", plaintext);
-			printf("Ceaser_plaintext.txt is created\n");
+			printf("Caesar_plaintext.txt is created\n");
 
 			fclose(fp);
 	}
