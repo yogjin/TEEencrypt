@@ -134,7 +134,7 @@ static TEE_Result enc_value(uint32_t param_types, TEE_Param params[4]) {
 	randomKey = randomKey % 25 + 1;
 	
 	DMSG("random_key : %d",randomKey);
-	DMSG("========================Encryption========================\n");
+	DMSG("========================Caesar Encryption========================\n");
 	DMSG ("Plaintext :  %s", in);
 	memcpy(encrypted, in, in_len);
 

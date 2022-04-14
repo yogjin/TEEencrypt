@@ -145,16 +145,16 @@ int main(int argc, char* argv[])
 			memcpy(op.params[2].tmpref.buffer, plaintext, len);
 			
 			/* invokeCommand 로직 (TA_TEEEncrypt_CMD_RSA_ENC_VALUE)
-			 * (2) TA에서 랜덤키 생성
-			 * (3) 랜덤키로 평문 암호화, 랜덤키는 TA의 root키로 암호화 (전부 시저암호 사용)
+			 * (2) TA에서 공개키, 개인키 생성
+			 * (3) 공개키로 평문 암호화
 			 */ 
 			res = TEEC_InvokeCommand(&sess, TA_TEEEncrypt_CMD_RSA_ENC_VALUE, &op, &err_origin);
 			if (res != TEEC_SUCCESS)
 				errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x", res, err_origin);
 
 			/*
-			 * (4) TA에서 CA로 암호문 + 암호화된 TA키 전달
-			 * (5) CA는 받은 암호문, 암호화된 키를 파일로 저장
+			 * (4) TA에서 CA로 암호문 전달
+			 * (5) CA는 받은 암호문을 파일로 저장
 			 * 암호화된 텍스트는 op.params[3].tmpref.buffer에 있음
 			 */
 			memcpy(ciphertext, op.params[3].tmpref.buffer, RSA_CIPHER_LEN_1024);
