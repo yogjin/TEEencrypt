@@ -35,6 +35,11 @@
 /* To the the UUID (found the the TA's h-file(s)) */
 #include <TEEencrypt_ta.h>
 
+/* For RSA */
+#define RSA_KEY_SIZE 1024
+#define RSA_MAX_PLAIN_LEN_1024 86 // (1024/8) - 42 (padding)
+#define RSA_CIPHER_LEN_1024 (RSA_KEY_SIZE / 8)
+
 int main(int argc, char* argv[])
 {
 	TEEC_Result res;
@@ -50,6 +55,8 @@ int main(int argc, char* argv[])
 	int len=64;
 	char *option = argv[1];
 	char *algorithm;
+	char clear[RSA_MAX_PLAIN_LEN_1024];
+	char ciph[RSA_CIPHER_LEN_1024];
 
 	/* Initialize a context connecting us to the TEE */
 	res = TEEC_InitializeContext(NULL, &ctx);
@@ -69,7 +76,7 @@ int main(int argc, char* argv[])
 	 * the remaining three parameters are unused.
 	 */
 	op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_OUTPUT, TEEC_VALUE_INOUT,
-					 TEEC_NONE, TEEC_NONE);
+					 TEEC_MEMREF_TEMP_INPUT, TEEC_MEMREF_TEMP_OUTPUT);
 	// TA와 공유하는 buffer: tmpref 할당
 	op.params[0].tmpref.buffer = plaintext;
 	op.params[0].tmpref.size = len;
@@ -123,7 +130,42 @@ int main(int argc, char* argv[])
 			fclose(fp);
 		}
 		else if (strcmp(algorithm, "RSA") == 0) {
+			// prepare_op
+			op.params[2].tmpref.buffer = clear;
+			op.params[2].tmpref.size = RSA_MAX_PLAIN_LEN_1024;
+			op.params[3].tmpref.buffer = ciph;
+			op.params[3].tmpref.size = RSA_CIPHER_LEN_1024;
 
+			printf("========================RSA Encryption========================\n");
+
+			// (1) CA에서 평문 텍스트 파일 읽기, TA 호출
+			fp = fopen(argv[2], "r");
+			fgets(plaintext, sizeof(plaintext), fp);
+			printf("Plaintext: %s\n", plaintext);
+			memcpy(op.params[2].tmpref.buffer, plaintext, len);
+			
+			/* invokeCommand 로직 (TA_TEEEncrypt_CMD_RSA_ENC_VALUE)
+			 * (2) TA에서 랜덤키 생성
+			 * (3) 랜덤키로 평문 암호화, 랜덤키는 TA의 root키로 암호화 (전부 시저암호 사용)
+			 */ 
+			res = TEEC_InvokeCommand(&sess, TA_TEEEncrypt_CMD_RSA_ENC_VALUE, &op, &err_origin);
+			if (res != TEEC_SUCCESS)
+				errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x", res, err_origin);
+
+			/*
+			 * (4) TA에서 CA로 암호문 + 암호화된 TA키 전달
+			 * (5) CA는 받은 암호문, 암호화된 키를 파일로 저장
+			 * 암호화된 텍스트는 op.params[3].tmpref.buffer에 있음
+			 */
+			memcpy(ciphertext, op.params[3].tmpref.buffer, RSA_CIPHER_LEN_1024);
+
+			printf("Ciphertext : %s\n", ciphertext);
+			
+			fp = fopen("RSA_ciphertext.txt","w");
+			fprintf(fp, "%s", ciphertext);
+			printf("RSA_ciphertext.txt is created\n");
+
+			fclose(fp);
 		}
 	}
 
